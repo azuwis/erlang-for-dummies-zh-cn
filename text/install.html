@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="../global.css" />
+<title>软件安装</title>
+</head>
+
+<body>
+<h1>软件安装</h1>
+
+<h2><a href="http://www.erlang.org/">Erlang</a></h2>
+
+<p>现在就来看看怎么安装Erlang。</p>
+
+<h3>在Linux发行版上安装</h3>
+
+<h4>Fedora 19/20</h4>
+
+<p>运行以下命令即可安装Erlang。</p>
+
+<pre>
+$ su -c 'yum install erlang'
+</pre>
+
+<p>安装后用<code>erl</code>命令即可打开Erlang Shell。 </p>
+
+
+<h3>在Windows上安装</h3>
+
+<p>用Windows须自行下载安装程序。你可以从<a href="http://www.erlang.org/download.html">官方网站</a>下载。</p>
+
+<p>以17.0版为例</p>
+
+<dl>
+<dt>32位Windows</dt>
+<dd>选择<strong>OTP 17.0 Windows 32-bit Binary File</strong></dd>
+<dt>64位Windows</dt>
+<dd>选择<strong>OTP 17.0 Windows 64-bit Binary File</strong></dd>
+</dl>
+
+<p>若下载很慢，不妨试试这个<a href="http://erlang-users.jp/">镜像</a>。</p>
+
+<p>以17.0版为例</p>
+<dl>
+<dt>32位Windows</dt>
+<dd>选择<strong>17.0那行的win32</strong></dd>
+<dt>64位Windows</dt>
+<dd>选择<strong>17.0那行的win64</strong></dd>
+</dl>
+
+<p>安装完，以17.0版为例，可以从<code>开始菜单 -&gt; 所有程序 -&gt; Erlang OTP 17 -&gt; Erlang</code>打开Erlang Shell。</p>
+
+<h3>Erlang Shell</h3>
+
+<p>打开Erlang Shell后，第一行会显示Erlang的版本信息，第二行是空行，第三行会显示Shell的版本信息。因为每次打开总是会显示这三行，所以以后都会忽略这三行。而<code>1&gt; </code>表示这后面是Shell里的第1次输入。</p>
+
+<pre>
+Erlang/OTP 17 (erts-6.0) [async-threads:10]
+
+Eshell V6.0  (abort with ^G)
+1&gt; 
+</pre>
+
+<p>输入<code>io:format(&quot;Hello, world!~n&quot;).</code>，按回车，会显示<code>Hello, world!</code>。现在会看到<code>2&gt; </code>，表示这后面是Shell里的第2次输入。</p>
+
+<pre class="erl">
+1&gt; io:format(&quot;Hello, world!~n&quot;).
+Hello, world!
+ok
+2&gt; 
+</pre>
+
+<p>输入<code>halt().</code>，按回车后，就退出Erlang Shell了。</p>
+
+<pre>
+1&gt; io:format(&quot;Hello, world!~n&quot;).
+Hello, world!
+ok
+2&gt; halt().
+</pre>
+
+<h2><a href="http://www.gnu.org/software/emacs/">GNU Emacs</a></h2>
+
+<p>推荐使用Emacs编辑Erlang代码。虽然使用别的文本编辑器编辑Erlang也不会有问题，但是Erlang官方安装包里已经提供了编辑Erlang代码必要的Emacs模块，可以直接使用，就不用费劲去找了。</p>
+
+<h3>在Linux发行版上安装</h3>
+
+<h4>Fedora 19/20</h4>
+
+<p>运行以下命令即可安装Emacs。</p>
+
+<pre>
+$ su -c 'yum install emacs'
+</pre>
+
+<p>安装完用<code>emacs</code>命令即可打开Emacs。</p>
+
+
+<h3>在Windows上安装</h3>
+
+<p>用Windows须自行下载Emacs。在<a href="http://www.gnu.org/software/emacs/#Obtaining">GNU Emacs首页</a>上，找到<strong>nearby GNU mirror</strong>，并点击进入。进入后，找到<code>windows</code>目录，以24.3版为例，选择<code>emacs-24.3-bin-i386.zip</code>。若下载很慢，不妨试试这个<a href="http://mirrors.ustc.edu.cn/gnu/emacs/windows/">镜像</a>。</p>
+
+<p>下载完只需要解压到合适的目录就可以了。找到解压出来的目录下的<code>bin</code>目录，双击<code>runemacs.exe</code>即可运行。<small>为方便以后打开，不妨在<code>runemacs.exe</code>上右键点<code>发送到 -&gt; 桌面快捷方式</code>。推荐把启始目录设置成你放代码的目录，在桌面的快捷方式图标上右键点<code>属性</code>，在<code>快捷方式</code>页可以修改<code>起始目录</code>。</small></p>
+
+<p>用Windows须自行配置Emacs。按<a href="http://www.erlang.org/doc/apps/tools/erlang_mode_chapter.html">The Erlang mode for Emacs</a>里<strong>Setup on Windows</strong>一节的说明设置<code>.emacs</code>文件。若不知道当前设置的<code>HOME</code>环境变量，可以进入Erlang Shell查看，运行<code>os:getenv("HOME").</code>，假如结果是<code>false</code>，那就是没有设置<code>HOME</code>环境变量。</p>
+
+</body>
+</html>

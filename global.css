@@ -1,0 +1,102 @@
+html {
+    background: #EEE;
+}
+
+* {
+    text-align: left;
+}
+
+body {
+    box-shadow: 0 0 1em 0 #AAA;
+    background: #FFF;
+    max-width: 44.5em;
+    margin: 2em auto;
+    padding: 2em;
+    text-align: center;
+
+    counter-reset: eqn;
+}
+
+h1 {
+    text-align: center;
+    counter-reset: chapter;
+}
+
+h2 {
+    counter-reset: section;
+}
+
+h3 {
+    counter-reset: subsection;
+}
+
+h2:before {
+    counter-increment: chapter;
+    content: counter(chapter) ". ";
+}
+
+h3:before {
+    counter-increment: section;
+    content: counter(chapter) "." counter(section) ". ";
+}
+
+h4:before {
+    counter-increment: subsection;
+    content: counter(chapter) "." counter(section) "." counter(subsection) ". ";
+}
+
+p {
+    line-height: 180%;
+}
+
+li {
+    line-height: 180%;
+}
+
+math {
+    font-size: 1.2em;
+    margin: 0.3em;
+}
+
+pre {
+    color: #111;
+    background: #EEE;
+    border: 1px solid #DDD;
+    margin: 1em;
+    padding: 1em;
+}
+
+pre.erl {
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+code {
+    color: #111;
+    background: #EEE;
+    border-bottom: 1px solid #DDD;
+    margin: 0.3em;
+    padding: 0.1em 0.3em;
+}
+
+math.equation:after {
+    margin: 0 0 0 2em;
+    font-family: sans-serif;
+    counter-increment: eqn;
+    content: "(" counter(eqn, lower-roman) ")";
+}
+
+table {
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+table th,
+table td {
+    padding: 0.2em 0.4em;
+    border: 1px solid #000000;
+}
+
+table thead th {
+    text-align: center;
+}

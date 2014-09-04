@@ -1,0 +1,759 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="../global.css" />
+<title>Erlang简介</title>
+</head>
+
+<body>
+<h1>Erlang简介</h1>
+
+<h2 id="expression">表达式</h2>
+
+<p>Erlang可以进行简单的算术运算。打开Erlang Shell，输入算术表达式和<code>.</code>后按回车，就会显示运算结果。这个运算结果叫做表达式的值。</p>
+
+<pre class="erl">
+1&gt; 1+1.
+2
+2&gt; 5-2.
+3
+3&gt; 2*2.
+4
+4&gt; 1+2*2.
+5
+5&gt; (1+2)*2.
+6
+6&gt; 
+</pre>
+
+
+<h2 id="function">函数</h2>
+
+<p>把一列数<math><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>4</mn></mrow></math>称作一个数列。这个数列共有四项，其中，第<math><mn>1</mn></math>项为<math><mn>1</mn></math>，第<math><mn>2</mn></math>项为<math><mn>2</mn></math>，第<math><mn>3</mn></math>项为<math><mn>3</mn></math>，第<math><mn>4</mn></math>项为<math><mn>4</mn></math>。可以把这个数列记作：</p>
+
+<math class="equation">
+<mrow>
+<msub><mi>a</mi><mi>n</mi></msub>
+<mo stretchy="false">=</mo>
+<mo>{</mo>
+<mtable>
+<mtr>
+  <mtd><mn>1</mn></mtd>
+  <mtd><mo>,</mo><mi>n</mi><mo>=</mo><mn>1</mn></mtd>
+</mtr>
+<mtr>
+  <mtd><mn>2</mn></mtd>
+  <mtd><mo>,</mo><mi>n</mi><mo>=</mo><mn>2</mn></mtd>
+</mtr>
+<mtr>
+  <mtd><mn>3</mn></mtd>
+  <mtd><mo>,</mo><mi>n</mi><mo>=</mo><mn>3</mn></mtd>
+</mtr>
+<mtr>
+  <mtd><mn>4</mn></mtd>
+  <mtd><mo>,</mo><mi>n</mi><mo>=</mo><mn>4</mn></mtd>
+</mtr>
+</mtable>
+</mrow>
+</math>
+
+<p>根据这个公式，可以从数列某一项的下标得到该项的值。可以用Erlang的函数来表示这种对应关系。</p>
+
+<pre class="erlang">
+a(1) -&gt; 1;
+a(2) -&gt; 2;
+a(3) -&gt; 3;
+a(4) -&gt; 4.
+</pre>
+
+<p>把这段代码称为函数<code>a/1</code>的定义，其中<code>a</code>是函数<code>a/1</code>的函数名，<code>1</code>表示函数<code>a/1</code>只接受1个参数，这里这个参数对应数列的下标。一个函数的定义，可以由一个或者多个分句组成。多个分句需要用<code>;</code>隔开。函数定义需要以<code>.</code>结尾。<code>-&gt;</code>左边是分句的头，<code>-&gt;</code>右边是分句的正文，分句的正文，可以由一个或者多个表达式组成，多个表达式需要用<code>,</code>隔开。把指定参数求函数的值称为调用。</p>
+
+
+
+<h2 id="module">模块</h2>
+
+<p>在调用这个函数之前，需要把这几行代码保存到一个文件里。Erlang代码是按模块组织的，每个模块会有一个对应的文件。还需要额外的几行代码来声明模块信息。</p>
+
+<pre class="erlang">
+-module(seq1).
+
+-export([a/1]).
+
+a(1) -&gt; 1;
+a(2) -&gt; 2;
+a(3) -&gt; 3;
+a(4) -&gt; 4.
+</pre>
+
+<p><code>-module(seq1).</code>表示模块名是<code>seq1</code>，通常，其对应的源代码的文件是<code>seq1.erl</code>。而<code>-export([a/1]).</code>表示，函数<code>a/1</code>是公开的，也就是可以在其所在模块之外被调用。</p>
+
+<p>打开Erlang Shell，输入<code>c(seq1).</code>，按回车之后就会根据<code>seq1</code>模块的源代码（也就是<code>seq1.erl</code>文件的内容），生成<code>seq1.beam</code>文件。这个过程叫做编译。有了<code>seq1.beam</code>这个文件，就可以直接在Erlang Shell里调用<code>seq1</code>模块里公开的函数了。因为是从模块外部调用，所以需要指明模块名，即在函数名前加上模块名<code>seq1</code>和<code>:</code>。</p>
+
+<pre class="erl">
+1&gt; c(seq1).
+{ok,seq1}
+2&gt; seq1:a(1).
+1
+3&gt; seq1:a(2).
+2
+4&gt; seq1:a(3).
+3
+5&gt; seq1:a(4).
+4
+6&gt; 
+</pre>
+
+
+<h2 id="pattern-matching">模式匹配</h2>
+
+<p>回到函数<code>a/1</code>的定义</p>
+
+<pre class="erlang">
+a(1) -&gt; 1;
+a(2) -&gt; 2;
+a(3) -&gt; 3;
+a(4) -&gt; 4.
+</pre>
+
+<p>Erlang在调用函数时，会按顺序逐个尝试，直到找到第一个能和传入参数匹配的分句，对分句正文的表达式逐个求值，并以最后一个表达式的值，作为函数调用表达式的值。假如没找到，程序就会出错。</p>
+
+<pre class="erl">
+1&gt; seq1:a(5).
+** exception error: no function clause matching seq1:a(5) (seq1.erl, line 5)
+2&gt; 
+</pre>
+
+<p>因为是按顺序的，所以即便有两个能匹配的，Erlang也只会用第一个。不妨在下面增加一个分句。</p>
+
+<pre class="erlang">
+a(1) -&gt; 1;
+a(2) -&gt; 2;
+a(3) -&gt; 3;
+a(4) -&gt; 4;
+a(4) -&gt; 5.
+</pre>
+
+<p>可以看到结果仍然是4。甚至Erlang都警告说，第9行没有机会匹配。</p>
+
+<pre class="erl">
+1&gt; seq2:a(4).
+4
+2&gt; 
+</pre>
+
+<p>有一个数列<math><mrow><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo>,</mo><mo>...</mo></mrow></math>，这个数列有无穷项，且从第<math><mn>1</mn></math>项开始每一项都是<math><mn>1</mn></math>，可以记作</p>
+
+<math class="equation">
+<mrow>
+<msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn><mo>,</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mo>...</mo>
+</mrow>
+</math>
+
+<p>可以用以下Erlang代码来表示这个数列。</p>
+
+<pre class="erlang">
+b(_) -&gt; 1.
+</pre>
+
+<p><code>_</code>表示无论传入的这个参数是什么，到这里都会匹配。</p>
+
+<pre class="erl">
+1&gt; seq3:b(1).
+1
+2&gt; seq3:b(2).
+1
+3&gt; seq3:b(3).
+1
+4&gt; seq3:b(4).
+1
+5&gt; 
+</pre>
+
+<p>有一个数列<math><mrow><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mo>...</mo></mrow></math>，这个数列有无穷项，且从第<math><mn>1</mn></math>项开始每一项的值都等于该项下标，可以记作</p>
+
+<math class="equation">
+<mrow>
+<msub><mi>c</mi><mi>n</mi></msub><mo>=</mo><mi>n</mi><mo>,</mo><mi>n</mi><mo>=</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mo>...</mo>
+</mrow>
+</math>
+
+<p>可以用以下Erlang代码来表示这个数列。</p>
+
+<pre class="erlang">
+c(N) -&gt; N.
+</pre>
+
+<p><code>N</code>是一个变量。变量的首字母都是大写的。在这里，<code>N</code>和<code>_</code>的作用类似，无论传入的这个参数是什么，到这里都会匹配。不同的是，匹配后，在分句的正文里，<code>N</code>的值就是传入的参数的值。</p>
+
+<pre class="erl">
+1&gt; seq4:c(1).
+1
+2&gt; seq4:c(2).
+2
+3&gt; seq4:c(3).
+3
+4&gt; seq4:c(4).
+4
+5&gt; 
+</pre>
+
+<p>回到数列<math><msub><mi>b</mi><mi>n</mi></msub></math>。虽然，对于数列里所有下标，函数都能给出正确的结果，但是，对于其他整数，函数却没有出错，这不是期望的结果。</p>
+
+<pre class="erl">
+1&gt; seq3:b(0).
+1
+2&gt; seq3:b(-1).
+1
+3&gt; 
+</pre>
+
+<p>函数一个分句的头部，还可以有一个或多个用<code>,</code>隔开的guard，用来限制匹配的参数的取值范围。</p>
+
+<pre class="erlang">
+b(N) when N &gt;= 1 -&gt; 1.
+</pre>
+
+<p>加上了guard之后就会出错了。</p>
+
+<pre class="erl">
+1&gt; seq5:b(0).
+** exception error: no function clause matching seq5:b(0) (seq5.erl, line 5)
+2&gt; 
+</pre>
+
+
+<p>数列<math><msub><mi>c</mi><mi>n</mi></msub></math>，也需要限制取值范围。</p>
+
+<pre class="erlang">
+c(N) when N &gt;= 1 -&gt; N.
+</pre>
+
+<p>同样会出错了。</p>
+
+<pre class="erl">
+1&gt; seq6:c(0).
+** exception error: no function clause matching seq6:c(0) (seq6.erl, line 5)
+2&gt; 
+</pre>
+
+
+<p>Erlang还可以在表达式里匹配，其中一种是<code>case</code>表达式。数列<math><msub><mi>a</mi><mi>n</mi></msub></math>也可以用下面这样的Erlang代码表示</p>
+
+<pre class="erlang">
+a(N) -&gt;
+    case N of
+        1 -&gt; 1;
+        2 -&gt; 2;
+        3 -&gt; 3;
+        4 -&gt; 4
+    end.
+</pre>
+
+<p>结果和之前的写法是一样的</p>
+
+<pre class="erl">
+1&gt; seq7:a(1).
+1
+2&gt; seq7:a(2).
+2
+3&gt; seq7:a(3).
+3
+4&gt; seq7:a(4).
+4
+5&gt; 
+</pre>
+
+
+<p>另一种表达式，<code>=</code>右边是一个表达式，相当于是传入的参数，<code>=</code>左边相当于函数定义里某个分句头。假如不匹配，那么就会出错。匹配的话，这个表达式的值，就是<code>=</code>右边表达式的值。</p>
+
+<pre class="erl">
+1&gt; 1 = 1.
+1
+2&gt; 1 = 1+1.
+** exception error: no match of right hand side value 2
+3&gt; 
+</pre>
+
+<p>当<code>case</code>表达式里只有一个分句，且这个分句没有使用guard。那么就可以有这种表达式代替。这种表达式的另一种用途是，可以用来写测试。<code>=</code>左边写期望的值，<code>=</code>右边写要测试的表达式，因为不匹配就会出错，这样就知道哪里不符合期望了。</p>
+
+<pre class="erlang">
+test() -&gt;
+    1 = a(1),
+    2 = a(2),
+    3 = a(3),
+    4 = a(4),
+    ok.
+</pre>
+
+<p>可以在一个函数里，列出所有的测试，最后一个表达式写<code>ok</code>，这样没有出错就会看到<code>ok</code>。</p>
+
+<pre class="erl">
+1&gt; seq7:test().
+ok
+2&gt; 
+</pre>
+
+
+<h2 id="data-type">数据类型</h2>
+
+<p><code>ok</code>是什么？Erlang不仅能进行整数运算，还有别的数据类型。<code>ok</code>就是一个类型为<code>atom()</code>的数据。</p>
+
+<p>现在，先假设存在一个8x8的棋盘，横坐标是1到8，纵坐标也是1到8。</p>
+
+<svg width="400" height="400">
+<g>
+<text x="60" y="20" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="100" y="20" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="140" y="20" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="180" y="20" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="220" y="20" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="260" y="20" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="300" y="20" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="340" y="20" text-anchor="middle" dominant-baseline="central">8</text>
+
+<text x="20" y="60" text-anchor="middle" dominant-baseline="central">1</text>
+<text x="20" y="100" text-anchor="middle" dominant-baseline="central">2</text>
+<text x="20" y="140" text-anchor="middle" dominant-baseline="central">3</text>
+<text x="20" y="180" text-anchor="middle" dominant-baseline="central">4</text>
+<text x="20" y="220" text-anchor="middle" dominant-baseline="central">5</text>
+<text x="20" y="260" text-anchor="middle" dominant-baseline="central">6</text>
+<text x="20" y="300" text-anchor="middle" dominant-baseline="central">7</text>
+<text x="20" y="340" text-anchor="middle" dominant-baseline="central">8</text>
+
+<line x1="40" y1="40" x2="40" y2="360" stroke="black" />
+<line x1="80" y1="40" x2="80" y2="360" stroke="black" />
+<line x1="120" y1="40" x2="120" y2="360" stroke="black" />
+<line x1="160" y1="40" x2="160" y2="360" stroke="black" />
+
+<line x1="200" y1="40" x2="200" y2="360" stroke="black" />
+<line x1="240" y1="40" x2="240" y2="360" stroke="black" />
+<line x1="280" y1="40" x2="280" y2="360" stroke="black" />
+<line x1="320" y1="40" x2="320" y2="360" stroke="black" />
+<line x1="360" y1="40" x2="360" y2="360" stroke="black" />
+
+
+<line x1="40" y1="40" x2="360" y2="40" stroke="black" />
+<line x1="40" y1="80" x2="360" y2="80" stroke="black" />
+<line x1="40" y1="120" x2="360" y2="120" stroke="black" />
+<line x1="40" y1="160" x2="360" y2="160" stroke="black" />
+
+<line x1="40" y1="200" x2="360" y2="200" stroke="black" />
+<line x1="40" y1="240" x2="360" y2="240" stroke="black" />
+<line x1="40" y1="280" x2="360" y2="280" stroke="black" />
+<line x1="40" y1="320" x2="360" y2="320" stroke="black" />
+<line x1="40" y1="360" x2="360" y2="360" stroke="black" />
+
+</g>
+</svg>
+
+<p>可以用一个<code>tuple()</code>表示这个棋盘上一个格子的坐标。比如，<code>{1,2}</code>表示横坐标为1，纵坐标为2的格子。只有当两个元素都相同的时候，才是同一个格子。</p>
+
+<pre class="erl">
+1&gt; {1,2} = {1,2}.
+{1,2}
+2&gt; {1,2} = {2,1}.
+** exception error: no match of right hand side value {2,1}
+3&gt; 
+</pre>
+
+<p><code>tuple()</code>可以有零个、一个或者多个元素。</p>
+
+<pre class="erl">
+1&gt; {} = {}.
+{}
+2&gt; {1} = {}.
+** exception error: no match of right hand side value {}
+3&gt; {1} = {1}.
+{1}
+4&gt; {1} = {1,1}.
+** exception error: no match of right hand side value {1,1}
+5&gt; {1,1} = {1,{1}}.
+** exception error: no match of right hand side value {1,{1}}
+6&gt; 
+</pre>
+
+
+<p>假设一枚棋子一步只能在棋盘上向上下左右移动一格。可以用一个<code>atom()</code>来表示方向。</p>
+
+<pre class="erlang">
+move(left, {X,Y})
+  when X &gt; 1, X =&lt; 8 -&gt;
+    {X-1, Y};
+move(right, {X,Y})
+  when X &gt;= 1, X &lt; 8 -&gt;
+    {X+1, Y};
+move(up, {X,Y})
+  when Y &gt; 1, Y =&lt; 8 -&gt;
+    {X, Y-1};
+move(down, {X,Y})
+  when Y &gt;= 1, Y &lt; 8 -&gt;
+    {X, Y+1}.
+</pre>
+
+<p>这样就计算出了移动一步之后的坐标</p>
+
+<pre class="erl">
+1&gt; board:move(left, {2,2}).
+{1,2}
+2&gt; board:move(right, {2,2}).
+{3,2}
+3&gt; board:move(up, {2,2}).
+{2,1}
+4&gt; board:move(down, {2,2}).
+{2,3}
+5&gt; 
+</pre>
+
+<p>可以用一个<code>list()</code>来表示多步移动。</p>
+
+<pre class="erlang">
+move_n(From, []) -&gt;
+    From;
+move_n(From, [H|T]) -&gt;
+    move_n(move(H, From), T).
+</pre>
+
+<p>就计算出移动多步之后的坐标了。</p>
+
+<pre class="erl">
+1&gt; board:move_n({1,1},[right,right,right]).
+{4,1}
+2&gt; board:move_n({1,1},[down,down,down]).
+{1,4}
+3&gt; 
+</pre>
+
+<p><code>list()</code>和<code>tuple()</code>类似，只是可以方便地取出前几项，而<code>tuple()</code>在匹配的时候元素个数必须相同。</p>
+
+
+<pre class="erl">
+1&gt; [a, b] = [a|[b]].
+[a,b]
+2&gt; [a, b, c] = [a,b|[c]].
+[a,b,c]
+3&gt; [a] = [a|[]].
+[a]
+4&gt; [a,b|_] = [a,b,c].
+[a,b,c]
+5&gt; [a,b|_] = [a,b,c,d].
+[a,b,c,d]
+6&gt; 
+</pre>
+
+
+
+<h2 id="summary">小结</h2>
+
+<p>用数列引出函数</p>
+
+<table>
+<thead>
+<tr>
+  <th rowspan="2">数列</th>
+  <th colspan="5">函数</th>
+</tr>
+<tr>
+  <th></th>
+  <th>多重匹配</th>
+  <th>参数范围</th>
+  <th><code>case</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><math><msub><mi>a</mi><mi>n</mi></msub><mo>:</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>4</mn></math></td>
+  <td><code>seq1:a/1</code></td>
+  <td><code>seq2:a/1</code></td>
+  <td></td>
+  <td><code>seq7:a/1</code></td>
+</tr>
+<tr>
+  <td><math><msub><mi>b</mi><mi>n</mi></msub><mo>=</mo><mn>1</mn></math></td>
+  <td><code>seq3:b/1</code></td>
+  <td></td>
+  <td><code>seq5:b/1</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><math><msub><mi>c</mi><mi>n</mi></msub><mo>=</mo><mi>n</mi></math></td>
+  <td><code>seq4:c/1</code></td>
+  <td></td>
+  <td><code>seq6:c/1</code></td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+
+<p>用棋盘引出多种数据类型</p>
+
+
+<h2 id="exercise">练习</h2>
+
+<p>先从隔壁Prolog家借点习题来练练</p>
+
+<h3>Find the last element of a list (P-99:P01)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:my_last([a,b,c,d]).
+d
+2&gt; 
+</pre>
+
+
+<h3>Find the last but one element of a list (P-99:P02)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:last_but_one([a,b,c,d]).
+c
+2&gt; 
+</pre>
+
+<h3>Find the K'th element of a list (P-99:P03)</h3>
+
+<p>The first element in the list is number 1.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:element_at([a,b,c,d,e],3).
+c
+2&gt; 
+</pre>
+
+
+<h3>Find the number of elements of a list (P-99:P04)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:my_length([a,b,c,d,e]).
+5
+2&gt; 
+</pre>
+
+<h3>Reverse a list (P-99:P05)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:my_reverse([a,b,c,d,e]).
+[e,d,c,b,a]
+2&gt; 
+</pre>
+
+<h3>Find out whether a list is a palindrome (P-99:P06)</h3>
+
+<p>A palindrome can be read forward or backward; e.g. <code>[x,a,m,a,x]</code></p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:is_palindrome([x,a,m,a,x]).
+true
+2&gt; 
+</pre>
+
+<h3>Flatten a nested list structure (P-99:P07)</h3>
+
+<p>Transform a list, possibly holding lists as elements into
+a <em>flat</em> list by replacing each list with its elements
+(recursively).</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:my_flatten([a, [b, [c, d], e]]).
+[a,b,c,d,e]
+2&gt; 
+</pre>
+
+<h3>Eliminate consecutive duplicates of list elements (P-99:P08)</h3>
+
+<p>If a list contains repeated elements they should be replaced with a
+single copy of the element. The order of the elements should not be
+changed.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:compress([a,a,a,a,b,c,c,a,a,d,e,e,e,e]).
+[a,b,c,a,d,e]
+2&gt; 
+</pre>
+
+<h3>Pack consecutive duplicates of list elements into sublists (P-99:P09)</h3>
+
+<p>If a list contains repeated elements they should be placed in
+separate sublists.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:pack([a,a,a,a,b,c,c,a,a,d,e,e,e,e]).
+[[a,a,a,a],[b],[c,c],[a,a],[d],[e,e,e,e]]
+2&gt; 
+</pre>
+
+<h3>Run-length encoding of a list (P-99:P10)</h3>
+
+<p>Use the result of problem P09 to implement the so-called run-length
+encoding data compression method. Consecutive duplicates of elements
+are encoded as terms <code>{N,E}</code> where N is the number of duplicates of the
+element E.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:encode([a,a,a,a,b,c,c,a,a,d,e,e,e,e]).
+[{4,a},{1,b},{2,c},{2,a},{1,d},{4,e}]
+2&gt; 
+</pre>
+
+<h3>Modified run-length encoding (P-99:P11)</h3>
+
+<p>Modify the result of problem P10 in such a way that if an element
+has no duplicates it is simply copied into the result list. Only
+elements with duplicates are transferred as <code>[N,E]</code> terms.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:encode_modified([a,a,a,a,b,c,c,a,a,d,e,e,e,e]).
+[{4,a},b,{2,c},{2,a},d,{4,e}]
+2&gt; 
+</pre>
+
+<h3>Decode a run-length compressed list (P-99:P12)</h3>
+
+<p>Given a run-length code list generated as specified in problem
+P11. Construct its uncompressed version.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:decode([{4,a},b,{2,c},{2,a},d,{4,e}]).
+[a,a,a,a,b,c,c,a,a,d,e,e,e,e]
+2&gt; 
+</pre>
+
+<h3>Run-length encoding of a list (direct solution) (P-99:P13)</h3>
+
+<p>Implement the so-called run-length encoding data compression method
+directly. I.e. don't explicitly create the sublists containing the
+duplicates, as in problem P09, but only count them. As in problem P11,
+simplify the result list by replacing the singleton terms <code>[1,X]</code> by
+<code>X</code>.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:encode_direct([a,a,a,a,b,c,c,a,a,d,e,e,e,e]).
+[{4,a},b,{2,c},{2,a},d,{4,e}]
+2&gt; 
+</pre>
+
+<h3>Duplicate the elements of a list (P-99:P14)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:dupli([a,b,c,c,d]).
+[a,a,b,b,c,c,c,c,d,d]
+2&gt; 
+</pre>
+
+<h3>Duplicate the elements of a list agiven number of times (P-99:P15)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:dupli([a,b,c],3).
+[a,a,a,b,b,b,c,c,c]
+2&gt; 
+</pre>
+
+<h3>Drop every N'th element from a list (P-99:P16)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:drop([a,b,c,d,e,f,g,h,i,k],3).
+[a,b,d,e,g,h,k]
+2&gt; 
+</pre>
+
+<h3>Split a list into two parts (P-99:P17)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:split([a,b,c,d,e,f,g,h,i,k],3).
+{[a,b,c],[d,e,f,g,h,i,k]}
+2&gt; 
+</pre>
+
+<h3>Extract a slice from a list (P-99:P18)</h3>
+
+<p>Given two indices, I and K, the slice is the list containing the
+elements between the I'th and K'th element of the original list (both
+limits included). Start counting the elements with 1.</p>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:slice([a,b,c,d,e,f,g,h,i,k],3,7).
+[c,d,e,f,g]
+2&gt;
+</pre>
+
+<h3>Rotate a list N places to the left (P-99:P19)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:rotate([a,b,c,d,e,f,g,h],3).
+[d,e,f,g,h,a,b,c]
+2&gt; p99:rotate([a,b,c,d,e,f,g,h],-2).
+[g,h,a,b,c,d,e,f]
+3&gt; 
+</pre>
+
+<h3>Remove the K'th element from a list (P-99:P20)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:remove_at([a,b,c,d],2).
+{b,[a,c,d]}
+2&gt; 
+</pre>
+
+<h3>Insert an element at a given position into a list (P-99:P21)</h3>
+
+<p>Example:</p>
+
+<pre>
+1&gt; p99:insert_at(alfa,[a,b,c,d],2).
+[a,alfa,b,c,d]
+2&gt; 
+</pre>
+
+
+<h2>参考资料</h2>
+
+<p><a href="http://www.erlang.org/course/sequential_programming.html">Sequential Programming</a></p>
+
+<p><a href="http://www.erlang.org/doc/reference_manual/patterns.html">Pattern Matching</a></p>
+
+<p><a href="http://www.erlang.org/doc/reference_manual/expressions.html">Expressions</a></p>
+
+<p><a href="http://www.ic.unicamp.br/~meidanis/courses/mc336/2009s2/prolog/problemas/">P-99: Ninety-Nine Prolog Problems</a></p>
+
+
+</body>
+</html>
