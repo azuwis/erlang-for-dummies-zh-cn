@@ -30,17 +30,17 @@ h3 {
     counter-reset: subsection;
 }
 
-h2:before {
+h2:not(.unnumbered):before {
     counter-increment: chapter;
     content: counter(chapter) ". ";
 }
 
-h3:before {
+h3:not(.unnumbered):before {
     counter-increment: section;
     content: counter(chapter) "." counter(section) ". ";
 }
 
-h4:before {
+h4:not(.unnumbered):before {
     counter-increment: subsection;
     content: counter(chapter) "." counter(section) "." counter(subsection) ". ";
 }
@@ -99,4 +99,8 @@ table td {
 
 table thead th {
     text-align: center;
+}
+
+blockquote {
+    text-align: right;
 }

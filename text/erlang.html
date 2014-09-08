@@ -3,11 +3,11 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" type="text/css" href="../global.css" />
-<title>Erlang简介</title>
+<title>初识Erlang</title>
 </head>
 
 <body>
-<h1>Erlang简介</h1>
+<h1>初识Erlang</h1>
 
 <h2 id="expression">表达式</h2>
 
@@ -105,7 +105,7 @@ a(4) -&gt; 4.
 </pre>
 
 
-<h2 id="pattern-matching">模式匹配</h2>
+<h2 id="pattern-matching">模式</h2>
 
 <p>回到函数<code>a/1</code>的定义</p>
 
@@ -286,7 +286,7 @@ test() -&gt;
     ok.
 </pre>
 
-<p>可以在一个函数里，列出所有的测试，最后一个表达式写<code>ok</code>，这样没有出错就会看到<code>ok</code>。</p>
+<p>可以在一个函数里，列出所有的测试，最后一个表达式写<code>ok</code>，这样没有出错就会看到<code>ok</code>。而不需要在Erlang Shell里重复输入这些表达式了。</p>
 
 <pre class="erl">
 1&gt; seq7:test().
@@ -424,7 +424,7 @@ move_n(From, [H|T]) -&gt;
 3&gt; 
 </pre>
 
-<p><code>list()</code>和<code>tuple()</code>类似，只是可以方便地取出前几项，而<code>tuple()</code>在匹配的时候元素个数必须相同。</p>
+<p><code>list()</code>和<code>tuple()</code>类似，只是可以方便地取出前几项，而<code>tuple()</code>只能一次匹配所有元素。</p>
 
 
 <pre class="erl">
@@ -744,13 +744,15 @@ limits included). Start counting the elements with 1.</p>
 </pre>
 
 
-<h2>参考资料</h2>
+<h2 class="unnumbered">参考资料</h2>
 
 <p><a href="http://www.erlang.org/course/sequential_programming.html">Sequential Programming</a></p>
 
 <p><a href="http://www.erlang.org/doc/reference_manual/patterns.html">Pattern Matching</a></p>
 
 <p><a href="http://www.erlang.org/doc/reference_manual/expressions.html">Expressions</a></p>
+
+<p><a href="http://armstrongonsoftware.blogspot.com/2009/01/micro-lightweight-unit-testing.html">Micro Lightweight Unit Testing</a></p>
 
 <p><a href="http://www.ic.unicamp.br/~meidanis/courses/mc336/2009s2/prolog/problemas/">P-99: Ninety-Nine Prolog Problems</a></p>
 

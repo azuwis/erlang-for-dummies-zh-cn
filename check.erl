@@ -200,7 +200,7 @@ test_files(Filenames) ->
         lists:map(
           fun(Filename) ->
                   Name = lists:sublist(Filename, length(Filename)-4),
-                  {Filename, compile:file(Name, [return_errors])}
+                  {Filename, compile:file(Name, [return_errors, report_warnings])}
           end,
           Filenames),
 

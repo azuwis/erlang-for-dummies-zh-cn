@@ -101,7 +101,7 @@ $ su -c 'yum install emacs'
 
 <p>用Windows须自行下载Emacs。在<a href="http://www.gnu.org/software/emacs/#Obtaining">GNU Emacs首页</a>上，找到<strong>nearby GNU mirror</strong>，并点击进入。进入后，找到<code>windows</code>目录，以24.3版为例，选择<code>emacs-24.3-bin-i386.zip</code>。若下载很慢，不妨试试这个<a href="http://mirrors.ustc.edu.cn/gnu/emacs/windows/">镜像</a>。</p>
 
-<p>下载完只需要解压到合适的目录就可以了。找到解压出来的目录下的<code>bin</code>目录，双击<code>runemacs.exe</code>即可运行。<small>为方便以后打开，不妨在<code>runemacs.exe</code>上右键点<code>发送到 -&gt; 桌面快捷方式</code>。推荐把启始目录设置成你放代码的目录，在桌面的快捷方式图标上右键点<code>属性</code>，在<code>快捷方式</code>页可以修改<code>起始目录</code>。</small></p>
+<p>下载完只需要解压到合适的目录就可以了。找到解压出来的目录下的<code>bin</code>目录，双击<code>runemacs.exe</code>即可运行。<small>为方便以后打开，不妨在<code>runemacs.exe</code>上右键点<code>发送到 -&gt; 桌面快捷方式</code>。推荐把启始目录设置成<code>%CD%</code>，在桌面的快捷方式图标上右键点<code>属性</code>，在<code>快捷方式</code>页可以修改<code>起始目录</code>。</small></p>
 
 <p>用Windows须自行配置Emacs。按<a href="http://www.erlang.org/doc/apps/tools/erlang_mode_chapter.html">The Erlang mode for Emacs</a>里<strong>Setup on Windows</strong>一节的说明设置<code>.emacs</code>文件。若不知道当前设置的<code>HOME</code>环境变量，可以进入Erlang Shell查看，运行<code>os:getenv("HOME").</code>，假如结果是<code>false</code>，那就是没有设置<code>HOME</code>环境变量。</p>
 

@@ -1,0 +1,471 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" type="text/css" href="../global.css" />
+<title>函数与模式</title>
+</head>
+
+<body>
+<h1>函数与模式</h1>
+
+<blockquote>
+You think you know when you learn, are more sure when you can write,
+even more when you can teach, but certain when you can program.
+<br/>
+-- Alan Perlis
+</blockquote>
+
+<p>Erlang中最最基本的两个概念就是函数和模式了。其实，算术运算最终也会被转换成函数来计算。比如，初识Erlang中最开始的例子可以写成下面这样。</p>
+
+<pre class="erl">
+1&gt; erlang:'+'(1,1).
+2
+2&gt; erlang:'-'(5,2).
+3
+3&gt; erlang:'*'(2,2).
+4
+4&gt; erlang:'+'(1,erlang:'*'(2,2)).
+5
+5&gt; erlang:'*'(erlang:'+'(1,2),2).
+6
+6&gt; 
+</pre>
+
+<p>注意到<code>+</code>两边都有单引号。通常<code>atom()</code>都是由小写字母开头的。Erlang也允许非小写字母开头或者有特殊字符的<code>atom()</code>。这些<code>atom()</code>就需要前后都有单引号了。当然了，在小写字母开头的<code>atom()</code>两边都加上单引号会被认为是和不加相同的<code>atom()</code>。</p>
+
+<pre class="erl">
+1&gt; a = 'a'.
+a
+2&gt; 
+</pre>
+
+<p>为加深对这两个基本概念的认识，现在自己动手写程序来解释它们。分两步。第一步，先解释函数，第二步，在第一步的基础上解释模式。因为没有模块，为简单起见，不区分函数名和变量名，这样我们可以定义一个函数，只要调用这个函数就能定义一个新函数。</p>
+
+<h2 id="substitute">代换</h2>
+
+<p>在解释函数之前，要能根据变量名找到变量的值。可以用一个<code>list()</code>来表示这种对应关系，这个<code>list()</code>的每个元素都是一个<code>tuple()</code>，每个<code>tuple()</code>的第一个元素是变量名，第二个元素是变量的值。我们把这种对应关系称作Environment。</p>
+
+
+<p>定义函数<code>subst/2</code>，它的第一个参数是变量名，第二个参数是一个Environment，它能根据第一个参数从第二个参数中找出对应的值。</p>
+
+<pre class="erlang">
+test(subst) -&gt;
+    none = subst(a, []),
+    {ok, c} = subst(a,[{a,c}]),
+    {ok, c} = subst(a,[{b,d},{a,c}]),
+    none = subst(a,[{b,d}]),
+    {ok, c} = subst(a,[{a,c},{b,d},{a,e}]);
+</pre>
+
+
+<h2 id="sexpr">S表达式</h2>
+
+<p>定义S表达式</p>
+
+<ul>
+  <li>若<code>Expr</code>是一个<code>atom()</code>，<code>Expr</code>是一个S表达式。</li>
+  <li>若<code>Expr</code>是一个<code>list()</code>，且<code>Expr</code>里的所有元素都是S表达式，那么<code>Expr</code>是一个S表达式。</li>
+</ul>
+
+<p>比如<code>a</code>是一个S表达式，而<code>1</code>就不是了。</p>
+
+<pre class="erlang">
+test() -&gt;
+    true = is_sexpr(a),
+    false = is_sexpr(1),
+    true = is_sexpr([]),
+    true = is_sexpr([a]),
+    true = is_sexpr([a, b, c]),
+    false = is_sexpr([1]),
+    false = is_sexpr([a, 1]),
+    ok.
+</pre>
+
+<p>若S表达式是一个<code>atom()</code>，将其视为变量名，其值可以在Environment中代换得到。若一个S表达式是一个<code>list()</code>，我们把它当作是一个函数调用，其中，这个<code>list()</code>第一个元素的值，是被调用的函数，剩余的元素就是传入的参数。</p>
+
+<pre class="erlang">
+apply(Expr, Env)
+  when is_atom(Expr) -&gt;
+    {ok, Value} = subst(Expr, Env),
+    {Value, Env};
+apply([H|T], Env) -&gt;
+    {Fun, Env1} = apply(H, Env),
+    call(Fun, T, Env1).
+</pre>
+
+<p>因为我们是通过调用函数的方式来定义函数的，所以调用函数后，Environment可能会发生变化。于是，函数<code>apply/2</code>的值是一个<code>tuple()</code>，其第一个元素是S表达式的值，第二个元素是求值后的Environment。</p>
+
+<p>定义几个辅助函数。有一个<code>list()</code>，其中每一个元素都是S表达式。调用<code>eval_list/2</code>可以得到一个<code>list()</code>，其中每一项都是对应S表达式的值。</p>
+
+<pre class="erlang">
+eval_list([], Env) -&gt;
+    {[], Env};
+eval_list([H|T], Env) -&gt;
+    {VH, Env1} = apply(H, Env),
+    {VT, Env2} = eval_list(T, Env1),
+    {[VH|VT], Env2}.
+</pre>
+
+<p>因为前面都是函数定义，我们一般只关心其中最后一个S表达式的值，定义<code>eval/2</code>，调用后只得到最后一个S表达式的值。</p>
+
+<pre class="erlang">
+eval(List, Env) -&gt;
+    {Values, Env1} = eval_list(List, Env),
+    {last(Values), Env1}.
+</pre>
+
+<p>我们很可能也不关心最终Environment是咋样的。定义<code>eval/1</code>，调用结果中不包括Environment。</p>
+
+<pre class="erlang">
+eval(List) -&gt;
+    {V, _} = eval(List, new_env()),
+    V.
+</pre>
+
+
+<h2 id="primitive">基本函数</h2>
+
+<p>定义9个基本函数：<code>quote</code>, <code>atom</code>, <code>eq</code>, <code>car</code>, <code>cdr</code>, <code>cons</code>, <code>cond</code>, <code>label</code>, <code>lambda</code>。为了能区分函数和普通数据，在Environment中，我们用<code>{fn, Name}</code>来表示函数，用<code>{data, X}</code>来表示普通数据。</p>
+
+<p>定义<code>new_env/0</code>，用来得到一个定义了所有基本函数的Environment。因为<code>cond</code>是Erlang保留字。所以需要在两边加单引号。</p>
+
+<pre class="erlang">
+new_env() -&gt;
+    [{quote,{fn,quote}},
+     {atom,{fn,atom}},
+     {eq,{fn,eq}},
+     {car,{fn,car}},
+     {cdr,{fn,cdr}},
+     {cons,{fn,cons}},
+     {'cond',{fn,'cond'}},
+     {lambda,{fn,lambda}},
+     {label,{fn,label}}].
+</pre>
+
+
+<h3><code>quote</code></h3>
+
+<p>因为在求值的时候，我们把<code>atom()</code>都当成变量名，把<code>list()</code>都当成函数调用。为了得到一个普通的<code>atom()</code>或<code>list()</code>，我们定义<code>quote</code>。<code>quote</code>只接受一个参数，唯一的作用就是直接返回传入的参数。</p>
+
+<pre class="erlang">
+test(quote) -&gt;
+    {data, a} = eval([[quote,a]]),
+    {data, [a,b,c]} = eval([[quote,[a,b,c]]]);
+</pre>
+
+
+<h3><code>atom</code></h3>
+
+<p>为了能区分<code>atom()</code>和<code>list()</code>，定义<code>atom</code>来检查表达式的值是否是<code>atom()</code>。</p>
+
+<pre class="erlang">
+test(atom) -&gt;
+    {data, true} = eval([[atom,[quote,a]]]),
+    {data, false} = eval([[atom,[quote,[a,b,c]]]]),
+    {data, false} = eval([[atom,[quote,[]]]]);
+</pre>
+
+
+<h3><code>eq</code></h3>
+
+<p>定义<code>eq</code>，用来比较两个S表达式是否相同，不过只比较<code>atom()</code>和<code>[]</code>，其他情况都当<code>false</code></p>
+
+<pre class="erlang">
+test(eq) -&gt;
+    {data, true} = eval([[eq,[quote,a],[quote,a]]]),
+    {data, false} = eval([[eq,[quote,a],[quote,b]]]),
+    {data, true} = eval([[eq,[quote,[]],[quote,[]]]]),
+    {data, false} = eval([[eq,[quote,[a,b]],[quote,[a,b]]]]);
+</pre>
+
+<h3><code>car</code>, <code>cdr</code>, <code>cons</code></h3>
+
+<p>定义几个操作<code>list()</code>的函数，分别相当于</p>
+
+<pre>
+car([H|_]) -> H.
+cdr([_|T]) -> T.
+cons(H,T) -> [H|T].
+</pre>
+
+<p>区别是Erlang里，是先求出各个参数的值，再去调用函数的。而这里，传入参数的表达式，由被调用的函数去求值。</p>
+
+<pre class="erlang">
+test(list) -&gt;
+    {data, a} = eval([[car,[quote,[a,b,c]]]]),
+    {data, [b,c]} = eval([[cdr,[quote,[a,b,c]]]]),
+    {data, [a,b,c]} = eval([[cons,[quote,a],[quote,[b,c]]]]);
+</pre>
+
+<h3><code>cond</code></h3>
+
+<p><code>cond</code>就像是一个只有guard的<code>case</code>表达式。每一个参数都是只有两个元素的<code>list()</code>。从第一个参数开始，逐个计算第一个元素的值，直到为<code>true</code>，那么值就取第二个元素的值。</p>
+
+<pre class="erlang">
+test('cond') -&gt;
+    {data, second} =
+        eval(
+          [['cond',
+            [[eq,[quote,a],[quote,b]],
+             [quote,first]],
+            [[atom,[quote,a]],
+             [quote,second]]]]);
+</pre>
+
+
+<h3><code>label</code></h3>
+
+<p>定义<code>label</code>函数把变量名和对应的值关联起来</p>
+
+<pre class="erlang">
+test(label) -&gt;
+    {data, a} =
+        eval(
+          [[label, a, [quote, a]],
+           a]),
+    {data, [a,b,c]} =
+        eval(
+          [[label, a, [quote, [a,b,c]]],
+           a]);
+</pre>
+
+
+<h3><code>lambda</code></h3>
+
+<p>定义<code>lambda</code>用来定义函数，第一个参数是参数名列表，第二个参数相当于Erlang里的分句正文，只不过这里没有多个分句。</p>
+
+<pre class="erlang">
+test(lambda) -&gt;
+    {data, [a,b]} =
+        eval(
+          [[[lambda,[x],
+             [cons,x,[quote,[b]]]],
+            [quote,a]]]),
+    {data, [z,b,c]} =
+        eval(
+          [[[lambda,[x,y],
+             [cons,x,[cdr,y]]],
+            [quote,z],
+            [quote,[a,b,c]]]]),
+    {data, [a,b,c]} =
+        eval(
+          [[[lambda,[f],
+             [f,[quote,[b,c]]]],
+            [lambda,[x],
+             [cons,[quote,a],x]]]]).
+</pre>
+
+
+<h2 id="improper-list"><code>improper_list()</code></h2>
+
+<p>因为S表达式中没有<code>tuple()</code>，我们可以用<code>improper_list()</code>来代替有两个元素的<code>tuple()</code>。</p>
+
+<p>Erlang里的<code>list()</code>可以看作是一种非常特殊的只有两个元素的<code>tuple()</code>，比如可以把<code>[X|Y]</code>看作是<code>{X,Y}</code>。定义<code>proper_list()</code></p>
+
+<ul>
+  <li><code>[]</code>是<code>proper_list()</code></li>
+  <li>若<code>B</code>是<code>proper_list()</code>，那么<code>[A|B]</code>也是<code>proper_list()</code>。</li>
+</ul>
+
+<p>若一个<code>list()</code>不是<code>proper_list()</code>，那就是<code>improper_list()</code>。比如，<code>[a|[b|[]]]</code>是<code>proper_list()</code>，通常写作<code>[a,b]</code>，而<code>[a|b]</code>是<code>improper_list()</code>。</p>
+
+
+<svg width="420" height="240">
+<defs>
+<g id="arrow">
+  <path d="M 10,5 L 0,0 L 2,5 L 0,10" />
+</g>
+
+<marker id="arrow-marker" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+  <g><use xlink:href="#arrow" /></g>
+</marker>
+
+<g id="node">
+  <rect width="40" height="40" fill="none" stroke="#000000" />
+  <rect width="40" height="40" x="40" fill="none" stroke="#000000" />
+  <circle cx="20" cy="20" r="4" />
+  <circle cx="60" cy="20" r="4" />
+</g>
+
+<g id="element">
+  <rect width="40" height="40" fill="none" stroke="#000000" />
+</g>
+
+<g id="link">
+  <polyline points="0,0 0,60 10,60" stroke="#000000" fill="none" marker-end="url(#arrow-marker)" />
+</g>
+
+<g id="pointer">
+  <polyline points="0,0 0,30" stroke="#000000" fill="none" marker-end="url(#arrow-marker)" />
+</g>
+
+<g id="proper">
+  <g><use xlink:href="#node" x="30" y="20" /></g>
+  <g><use xlink:href="#node" x="110" y="80" /></g>
+
+  <g><use xlink:href="#element" x="30" y="80" /></g>
+  <g><use xlink:href="#element" x="110" y="140" /></g>
+  <g><use xlink:href="#element" x="190" y="140" /></g>
+
+  <g><use xlink:href="#link" x="90" y="40" /></g>
+  <g><use xlink:href="#link" x="170" y="100" /></g>
+
+  <g><use xlink:href="#pointer" x="50" y="40" /></g>
+  <g><use xlink:href="#pointer" x="130" y="100" /></g>
+
+  <text x="45" y="105" font-size="16">
+    <tspan>a</tspan>
+  </text>
+
+  <text x="125" y="165" font-size="16">
+    <tspan>b</tspan>
+  </text>
+
+  <text x="205" y="165" font-size="16">
+    <tspan>[]</tspan>
+  </text>
+</g>
+
+<g id="improper">
+  <g><use xlink:href="#node" x="30" y="20" /></g>
+
+  <g><use xlink:href="#element" x="30" y="80" /></g>
+  <g><use xlink:href="#element" x="110" y="80" /></g>
+
+  <g><use xlink:href="#link" x="90" y="40" /></g>
+  <g><use xlink:href="#pointer" x="50" y="40" /></g>
+
+  <text x="45" y="105" font-size="16">
+    <tspan>a</tspan>
+  </text>
+
+  <text x="125" y="105" font-size="16">
+    <tspan>b</tspan>
+  </text>
+</g>
+</defs>
+
+<text x="30" y="30" font-size="16">
+  <tspan>[ a | [ b | [] ] ]</tspan>
+</text>
+
+<text x="270" y="30" font-size="16">
+  <tspan>[ a | b ]</tspan>
+</text>
+
+<g><use xlink:href="#proper" y="40" /></g>
+<g><use xlink:href="#improper" x="240" y="40" /></g>
+
+</svg>
+
+<h2 id="pattern">模式</h2>
+
+<p>现在来定义模式表达式</p>
+
+<ul>
+<li><code>ignore</code>用来任意值</li>
+<li><code>nil</code>用来匹配<code>[]</code></li>
+<li><code>[atom|a]</code>用来匹配<code>a</code></li>
+<li><code>[var|a]</code>用来匹配变量<code>a</code>的值，若未定义那就定义为当前比较的值</li>
+<li><code>[cons|[A|B]]</code>用来匹配<code>[X|Y]</code>，其中<code>A</code>, <code>B</code>都是模式表达式，分别用来匹配<code>X</code>, <code>Y</code>。</li>
+</ul>
+
+<pre class="erlang">
+test(match) -&gt;
+    {data, []} =
+        eval([[match,
+               [quote, a],
+               [quote, [atom|a]],
+               [quote, []]]]),
+    {data, [[a|a]]} =
+        eval([[match,
+               [quote, a],
+               [quote, [var|a]],
+               [quote, []]]]),
+    {data, [[a|a]]} =
+        eval([[match,
+               [quote, a],
+               [quote, [var|a]],
+               [quote, [[a|a]]]]]),
+    {data, false} =
+        eval([[match,
+               [quote, b],
+               [quote, [var|a]],
+               [quote, [[a|a]]]]]),
+    {data, []} =
+        eval([[match,
+               [quote, a],
+               [quote, ignore],
+               [quote, []]]]),
+    {data, []} =
+        eval([[match,
+               [quote, [a|b]],
+               [quote, [cons|[[atom|a]|[atom|b]]]],
+               [quote, []]]]);
+test(apply_pattern) -&gt;
+    {data, []} =
+        eval([[apply_pattern,
+               [quote, nil],
+               [quote, []]]]),
+    {data, [a]} =
+        eval([[apply_pattern,
+               [quote, [cons|[[atom|a]|nil]]],
+               [quote, []]]]),
+    {data, [b]} =
+        eval([[apply_pattern,
+               [quote, [cons|[[var|a]|nil]]],
+               [quote, [[a|b]]]]]);
+</pre>
+
+<p>定义辅助函数<code>make_pattern</code>，用来更方便地生成模式表达式。其中第一个参数是一个表达式，第二个参数是变量名列表。第一个参数中的<code>atom()</code>，假如出现在变量名列表里，我们就认为那是一个变量，否则我们就认为那是一个<code>atom()</code>。</p>
+
+<pre class="erlang">
+test(make_pattern) ->
+    {data, nil} =
+        eval([[make_pattern,
+               [quote, []],
+               [quote, []]]]),
+    {data, [atom|a]} =
+        eval([[make_pattern,
+               [quote, a],
+               [quote, []]]]),
+    {data, [var|a]} =
+        eval([[make_pattern,
+               [quote, a],
+               [quote, [a]]]]),
+    {data, [cons|[[atom|a]|nil]]} =
+        eval([[make_pattern,
+               [quote, [a]],
+               [quote, []]]]);
+</pre>
+
+
+<h2 id="exercise">练习</h2>
+
+<h3>定义函数</h3>
+
+<p>给出上面所有函数的定义。</p>
+
+<h3>用S表达式解释S表达式</h3>
+
+<p>借助用S表达式上实现的模式，可以比较直接地将Erlang解释S表达式的代码翻译成S表达式。</p>
+
+<h3>定义Macro</h3>
+
+<p>The Roots of Lisp定义了<code>defun</code>。<code>[defun, id, [x], x]</code>相当于是<code>[label, id, [lambda, [x], x]]</code>。我们不想为<code>defun</code>单独定义一个基本函数。所以定义<code>macro</code>，用<code>label</code>和<code>macro</code>来定义<code>defun</code>，<code>[label, defun, [macro, [x,y,z], ...]]</code>。</p>
+
+<h3>用Erlang解释Erlang</h3>
+
+<p>现在我们来用Erlang解释到目前为止的Erlang代码。</p>
+
+
+<h2 class="unnumbered">参考资料</h2>
+
+<p><a href="http://www-formal.stanford.edu/jmc/recursive/node3.html">Recursive Functions of Symbolic Expressions</a></p>
+
+<p><a href="http://www.paulgraham.com/rootsoflisp.html">The Roots of Lisp</a></p>
+
+
+</body>
+</html>
