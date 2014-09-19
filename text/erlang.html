@@ -60,7 +60,7 @@
 
 <p>根据这个公式，可以从数列某一项的下标得到该项的值。可以用Erlang的函数来表示这种对应关系。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq1.erl">
 a(1) -&gt; 1;
 a(2) -&gt; 2;
 a(3) -&gt; 3;
@@ -75,7 +75,7 @@ a(4) -&gt; 4.
 
 <p>在调用这个函数之前，需要把这几行代码保存到一个文件里。Erlang代码是按模块组织的，每个模块会有一个对应的文件。还需要额外的几行代码来声明模块信息。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq1.erl">
 -module(seq1).
 
 -export([a/1]).
@@ -109,7 +109,7 @@ a(4) -&gt; 4.
 
 <p>回到函数<code>a/1</code>的定义</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq1.erl">
 a(1) -&gt; 1;
 a(2) -&gt; 2;
 a(3) -&gt; 3;
@@ -126,7 +126,7 @@ a(4) -&gt; 4.
 
 <p>因为是按顺序的，所以即便有两个能匹配的，Erlang也只会用第一个。不妨在下面增加一个分句。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq2.erl">
 a(1) -&gt; 1;
 a(2) -&gt; 2;
 a(3) -&gt; 3;
@@ -152,7 +152,7 @@ a(4) -&gt; 5.
 
 <p>可以用以下Erlang代码来表示这个数列。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq3.erl">
 b(_) -&gt; 1.
 </pre>
 
@@ -180,7 +180,7 @@ b(_) -&gt; 1.
 
 <p>可以用以下Erlang代码来表示这个数列。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq4.erl">
 c(N) -&gt; N.
 </pre>
 
@@ -210,7 +210,7 @@ c(N) -&gt; N.
 
 <p>函数一个分句的头部，还可以有一个或多个用<code>,</code>隔开的guard，用来限制匹配的参数的取值范围。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq5.erl">
 b(N) when N &gt;= 1 -&gt; 1.
 </pre>
 
@@ -225,7 +225,7 @@ b(N) when N &gt;= 1 -&gt; 1.
 
 <p>数列<math><msub><mi>c</mi><mi>n</mi></msub></math>，也需要限制取值范围。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq6.erl">
 c(N) when N &gt;= 1 -&gt; N.
 </pre>
 
@@ -240,7 +240,7 @@ c(N) when N &gt;= 1 -&gt; N.
 
 <p>Erlang还可以在表达式里匹配，其中一种是<code>case</code>表达式。数列<math><msub><mi>a</mi><mi>n</mi></msub></math>也可以用下面这样的Erlang代码表示</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq7.erl">
 a(N) -&gt;
     case N of
         1 -&gt; 1;
@@ -277,7 +277,7 @@ a(N) -&gt;
 
 <p>当<code>case</code>表达式里只有一个分句，且这个分句没有使用guard。那么就可以有这种表达式代替。这种表达式的另一种用途是，可以用来写测试。<code>=</code>左边写期望的值，<code>=</code>右边写要测试的表达式，因为不匹配就会出错，这样就知道哪里不符合期望了。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="seq7.erl">
 test() -&gt;
     1 = a(1),
     2 = a(2),
@@ -376,7 +376,7 @@ ok
 
 <p>假设一枚棋子一步只能在棋盘上向上下左右移动一格。可以用一个<code>atom()</code>来表示方向。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="board.erl">
 move(left, {X,Y})
   when X &gt; 1, X =&lt; 8 -&gt;
     {X-1, Y};
@@ -407,7 +407,7 @@ move(down, {X,Y})
 
 <p>可以用一个<code>list()</code>来表示多步移动。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="board.erl">
 move_n(From, []) -&gt;
     From;
 move_n(From, [H|T]) -&gt;

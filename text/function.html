@@ -49,7 +49,7 @@ a
 
 <p>定义函数<code>subst/2</code>，它的第一个参数是变量名，第二个参数是一个Environment，它能根据第一个参数从第二个参数中找出对应的值。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(subst) -&gt;
     none = subst(a, []),
     {ok, c} = subst(a,[{a,c}]),
@@ -70,7 +70,7 @@ test(subst) -&gt;
 
 <p>比如<code>a</code>是一个S表达式，而<code>1</code>就不是了。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="sexpr.erl">
 test() -&gt;
     true = is_sexpr(a),
     false = is_sexpr(1),
@@ -84,7 +84,7 @@ test() -&gt;
 
 <p>若S表达式是一个<code>atom()</code>，将其视为变量名，其值可以在Environment中代换得到。若一个S表达式是一个<code>list()</code>，我们把它当作是一个函数调用，其中，这个<code>list()</code>第一个元素的值，是被调用的函数，剩余的元素就是传入的参数。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 apply(Expr, Env)
   when is_atom(Expr) -&gt;
     {ok, Value} = subst(Expr, Env),
@@ -98,7 +98,7 @@ apply([H|T], Env) -&gt;
 
 <p>定义几个辅助函数。有一个<code>list()</code>，其中每一个元素都是S表达式。调用<code>eval_list/2</code>可以得到一个<code>list()</code>，其中每一项都是对应S表达式的值。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 eval_list([], Env) -&gt;
     {[], Env};
 eval_list([H|T], Env) -&gt;
@@ -109,7 +109,7 @@ eval_list([H|T], Env) -&gt;
 
 <p>因为前面都是函数定义，我们一般只关心其中最后一个S表达式的值，定义<code>eval/2</code>，调用后只得到最后一个S表达式的值。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 eval(List, Env) -&gt;
     {Values, Env1} = eval_list(List, Env),
     {last(Values), Env1}.
@@ -117,7 +117,7 @@ eval(List, Env) -&gt;
 
 <p>我们很可能也不关心最终Environment是咋样的。定义<code>eval/1</code>，调用结果中不包括Environment。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 eval(List) -&gt;
     {V, _} = eval(List, new_env()),
     V.
@@ -130,7 +130,7 @@ eval(List) -&gt;
 
 <p>定义<code>new_env/0</code>，用来得到一个定义了所有基本函数的Environment。因为<code>cond</code>是Erlang保留字。所以需要在两边加单引号。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 new_env() -&gt;
     [{quote,{fn,quote}},
      {atom,{fn,atom}},
@@ -148,7 +148,7 @@ new_env() -&gt;
 
 <p>因为在求值的时候，我们把<code>atom()</code>都当成变量名，把<code>list()</code>都当成函数调用。为了得到一个普通的<code>atom()</code>或<code>list()</code>，我们定义<code>quote</code>。<code>quote</code>只接受一个参数，唯一的作用就是直接返回传入的参数。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(quote) -&gt;
     {data, a} = eval([[quote,a]]),
     {data, [a,b,c]} = eval([[quote,[a,b,c]]]);
@@ -159,7 +159,7 @@ test(quote) -&gt;
 
 <p>为了能区分<code>atom()</code>和<code>list()</code>，定义<code>atom</code>来检查表达式的值是否是<code>atom()</code>。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(atom) -&gt;
     {data, true} = eval([[atom,[quote,a]]]),
     {data, false} = eval([[atom,[quote,[a,b,c]]]]),
@@ -171,7 +171,7 @@ test(atom) -&gt;
 
 <p>定义<code>eq</code>，用来比较两个S表达式是否相同，不过只比较<code>atom()</code>和<code>[]</code>，其他情况都当<code>false</code></p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(eq) -&gt;
     {data, true} = eval([[eq,[quote,a],[quote,a]]]),
     {data, false} = eval([[eq,[quote,a],[quote,b]]]),
@@ -191,7 +191,7 @@ cons(H,T) -> [H|T].
 
 <p>区别是Erlang里，是先求出各个参数的值，再去调用函数的。而这里，传入参数的表达式，由被调用的函数去求值。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(list) -&gt;
     {data, a} = eval([[car,[quote,[a,b,c]]]]),
     {data, [b,c]} = eval([[cdr,[quote,[a,b,c]]]]),
@@ -202,7 +202,7 @@ test(list) -&gt;
 
 <p><code>cond</code>就像是一个只有guard的<code>case</code>表达式。每一个参数都是只有两个元素的<code>list()</code>。从第一个参数开始，逐个计算第一个元素的值，直到为<code>true</code>，那么值就取第二个元素的值。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test('cond') -&gt;
     {data, second} =
         eval(
@@ -218,7 +218,7 @@ test('cond') -&gt;
 
 <p>定义<code>label</code>函数把变量名和对应的值关联起来</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(label) -&gt;
     {data, a} =
         eval(
@@ -235,7 +235,7 @@ test(label) -&gt;
 
 <p>定义<code>lambda</code>用来定义函数，第一个参数是参数名列表，第二个参数相当于Erlang里的分句正文，只不过这里没有多个分句。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="function.erl">
 test(lambda) -&gt;
     {data, [a,b]} =
         eval(
@@ -371,7 +371,7 @@ test(lambda) -&gt;
 <li><code>[cons|[A|B]]</code>用来匹配<code>[X|Y]</code>，其中<code>A</code>, <code>B</code>都是模式表达式，分别用来匹配<code>X</code>, <code>Y</code>。</li>
 </ul>
 
-<pre class="erlang">
+<pre class="erlang" filename="pattern.erl">
 test(match) -&gt;
     {data, []} =
         eval([[match,
@@ -420,7 +420,7 @@ test(apply_pattern) -&gt;
 
 <p>定义辅助函数<code>make_pattern</code>，用来更方便地生成模式表达式。其中第一个参数是一个表达式，第二个参数是变量名列表。第一个参数中的<code>atom()</code>，假如出现在变量名列表里，我们就认为那是一个变量，否则我们就认为那是一个<code>atom()</code>。</p>
 
-<pre class="erlang">
+<pre class="erlang" filename="pattern.erl">
 test(make_pattern) ->
     {data, nil} =
         eval([[make_pattern,

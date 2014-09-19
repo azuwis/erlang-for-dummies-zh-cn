@@ -153,6 +153,14 @@ verify_sessions(Tree) ->
 
 
 find_all_snippets({<<"pre">>, Attrs, Children}) ->
+    Filename =
+        case proplists:get_value(<<"filename">>, Attrs) of
+            undefined ->
+                undefined;
+            Value ->
+                unicode:characters_to_list(Value)
+        end,
+
     case proplists:get_value(<<"class">>, Attrs) of
         undefined ->
             [];
@@ -166,31 +174,30 @@ find_all_snippets({<<"pre">>, Attrs, Children}) ->
                     [];
                 true ->
                     [$\n|Text] = unicode:characters_to_list(Children),
-                    [Text]
+                    [{Filename, Text}]
             end
     end;
 find_all_snippets({_, _, Children}) ->
     lists:append([find_all_snippets(Node) || Node <- Children, not is_binary(Node)]).
 
 
-locate_snippet(_Snippet, []) ->
-    false;
-locate_snippet(Snippet, [{Filename, Text}|Rest]) ->
-    case string:str(Text, Snippet) of
-        0 ->
-            locate_snippet(Snippet, Rest);
-        N ->
-            Line = string:words(lists:sublist(Snippet, N-1), $\n),
-            [{file, Filename}, {line, Line}]
-    end.
-
-
 locate_snippets(Tree, SourceFiles) ->
     Snippets = find_all_snippets(Tree),
 
     lists:map(
-      fun(Snippet) ->
-              {Snippet, locate_snippet(Snippet, SourceFiles)}
+      fun({Filename, Snippet}) ->
+              case proplists:get_value(Filename, SourceFiles) of
+                  undefined ->
+                      {Snippet, false};
+                  Text ->
+                      case string:str(Text, Snippet) of
+                          0 ->
+                              {Snippet, false};
+                          N ->
+                              Line = string:words(lists:sublist(Snippet, N-1), $\n),
+                              {Snippet, [{file, Filename}, {line, Line}]}
+                      end
+              end
       end,
       Snippets).
 
@@ -241,7 +248,7 @@ read_tree(Filename, Dir) ->
 read_erl(Filename, Dir) ->
     Fullname = lists:flatten([Dir, "/", Filename]),
     {ok, Bin} = file:read_file(Fullname),
-    {Fullname, unicode:characters_to_list(Bin)}.
+    {Filename, unicode:characters_to_list(Bin)}.
 
 check_folder(Folder) ->
     {ok, Cwd} = file:get_cwd(),
