@@ -466,18 +466,9 @@ init_env() ->
                     ],
 
                     [[eq, [cdr, [subst, [quote, r], table]], [quote, true]],
-                     [with_match,
-                      [eval_list,
-                       [list1, [cdr, [subst, [quote, e], table]]],
-                       [cdr, [subst, [quote, env1], table]]],
-                      [make_pattern, [quote, [[v]|env2]], [quote, [v,env2]]],
-                      table,
-
-                      [lambda, [table],
-                       [apply_pattern,
-                        [make_pattern, [quote, [v|env2]], [quote, [v,env2]]],
-                        table]
-                      ]
+                     [apply,
+                      [cdr, [subst, [quote, e], table]],
+                      [cdr, [subst, [quote, env1], table]]
                      ]
                     ]
 

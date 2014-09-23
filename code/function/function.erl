@@ -62,8 +62,7 @@ call({fn, 'cond'}, [[P,E]|T], Env) ->
         false ->
             call({fn, 'cond'}, T, Env1);
         true ->
-            {[V], Env2} = eval_list([E], Env1),
-            {V, Env2}
+            apply(E, Env1)
     end;
 call({fn, label}, [X,Y], Env) ->
     {Y1, Env1} = apply(Y, Env),
